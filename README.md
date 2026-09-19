@@ -1,130 +1,202 @@
-# Genshin Interactive Hidden Chest Map
+<div align="center">
 
-An interactive Genshin Impact map focused on chests and rewards the Treasure Compass cannot detect. It includes region and discovery filters, searchable chest guides, rarity based markers, and local completion tracking.
+<img src="./public/treasure-chest.png" alt="Hidden Chest Atlas treasure chest" width="150" />
 
-## Development
+# Hidden Chest Atlas
 
-This project runs on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
+### A focused Genshin Impact tracker for the treasures your compass cannot find
 
-## Prerequisites
+Explore a Teyvat inspired map, filter compass undetectable discoveries, open location guides, and keep track of every chest you find.
 
-- Node.js `>=22.13.0`
-- Portable: Windows, macOS, or Linux; no Bash required
-- Managed Linux: managed Linux runtime with Bash, `flock`, `curl`, `sha256sum`, and GNU `timeout`
-- Git is required only for publishing
+<br />
 
-## Sites Lifecycle
+[![Live Demo](https://img.shields.io/badge/Explore_Live_Demo-D4A84F?style=for-the-badge&logo=googlemaps&logoColor=white)](https://hidden-chest-atlas.shaqib-dev.chatgpt.site)
+[![React](https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare_Workers-Ready-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 
-The Sites initializer copies the shared starter and selects managed-linux only when `SITES_MANAGED_LINUX_CONTAINER=1`; otherwise it selects portable. It saves the selection only in ignored `.sites-runtime/execution-profile.json`. Both profiles copy/configure first, then use the plugin's separate `install-dependencies.mjs` step to measure installation independently. Edit source under `app/` and follow the Sites skill for installation, preview, builds, and publishing.
+<br />
 
-Whenever reopening or moving a checkout, run `node <plugin-root>/scripts/configure-execution-profile.mjs` before project commands. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
+[Live demo](https://hidden-chest-atlas.shaqib-dev.chatgpt.site) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Roadmap](#roadmap)
 
-This starter does not use `wrangler.jsonc`.
+</div>
 
-`install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
+---
 
-- **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
-- **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
+## Find what the Treasure Compass misses
 
-`scripts/sites-env.mjs` preserves the caller's HOME, npm cache, proxy, XDG, and temporary-directory configuration while defaulting Wrangler and Miniflare state to the checkout. If npm reports an unwritable cache, select a writable path with `npm_config_cache` for that install. The `dev` and `start` scripts also keep Wrangler logs inside the checkout. Generated `.sites-runtime/` and `.wrangler/` directories are disposable and ignored by Git.
+The in game Treasure Compass is useful, but it does not reveal every reward in Teyvat. Buried chests, quest rewards, hidden challenges, Seelie encounters, and puzzle based discoveries can still be easy to overlook.
 
-On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
+Hidden Chest Atlas gives those locations a dedicated home. Instead of filling the screen with every visible chest, it focuses on discoveries that need context, instructions, or manual investigation.
 
-For browser QA on managed Linux, use `sites-preview start`. The project's dev script runs Vite and accepts the supervisor's `--host 0.0.0.0 --port 4173 --strictPort` arguments. The internal browser uses `http://terminal.local:4173/`; it is not a user-facing URL. The supervisor owns the preview lifecycle. The ignored local profile survives the supervisor's cleared process environment.
+> **Honest tracking by design:** HoYoLAB exposes aggregate chest totals, not the exact coordinates of chests a player has opened. Hidden Chest Atlas therefore uses manual completion tracking and never claims to identify individual in game discoveries automatically.
 
-The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
+## Product preview
 
-The Worker uses `vinext/server/fetch-handler`, including Vinext's config-aware image handling. After building, `npm start` runs that Worker locally through Wrangler on `127.0.0.1`, sharing `.wrangler/state` with dev preview and local D1 migrations; it does not deploy the site or simulate sign-in. Use the URL printed by the server. Pass `npm start -- --port <port>` to select a different built-preview port.
+<a href="https://hidden-chest-atlas.shaqib-dev.chatgpt.site">
+  <img src="./public/teyvat-world-map.png" alt="Illustrated Teyvat world map used by Hidden Chest Atlas" width="100%" />
+</a>
 
-Local previews use Miniflare's placeholder `Request.cf` metadata without a network lookup. Set `CLOUDFLARE_CF_FETCH_ENABLED=true` to opt into fetching preview metadata; this setting does not change hosted request metadata.
+<div align="center">
+  <sub>Illustrated Teyvat style world map with rarity coded treasure markers</sub>
+</div>
 
-Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=true` to opt in.
+## Features
 
-## Included Shape
+<table>
+  <tr>
+    <td width="33%" valign="top"><h3>🧭 Hidden discovery focus</h3>Filters around buried rewards, puzzles, quests, challenges, Seelie encounters, and other compass undetectable finds.</td>
+    <td width="33%" valign="top"><h3>🗺️ Teyvat style map</h3>Places recognizable treasure markers over an illustrated world map with clear region and location context.</td>
+    <td width="33%" valign="top"><h3>✅ Local progress</h3>Lets players mark locations as found and saves completion state directly on the device.</td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top"><h3>🔎 Fast filtering</h3>Search by location, filter by region or discovery method, and hide locations already completed.</td>
+    <td width="33%" valign="top"><h3>💎 Rarity markers</h3>Distinguishes Common, Exquisite, Precious, Luxurious, and Remarkable rewards with visible colors.</td>
+    <td width="33%" valign="top"><h3>📖 Practical guides</h3>Shows the area, discovery method, difficulty, reward estimate, and instructions for every location.</td>
+  </tr>
+</table>
 
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+## How it works
 
-## Workspace Auth Headers
+```mermaid
+flowchart TB
+    P["Player explores the map"]
+    F["Search and discovery filters"]
+    M["Compass undetectable locations"]
+    G["Location guide and requirements"]
+    L[("Local completion state")]
 
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
-
-The user ID is stable for the same user on the same Site and different across Sites. Use it as the durable user key; use email and name for display or contact purposes.
-
-SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+    P --> F
+    F --> M
+    M --> G
+    G --> L
+    L --> F
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+### Discovery categories
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
+| Category | Hidden mode | Why |
+| --- | :---: | --- |
+| Directly visible standard chests | No | These are generally discoverable with the Treasure Compass. |
+| Buried or dig locations | Yes | They require interacting with a specific ground location. |
+| Quest unlocked chests | Yes | They depend on quest progress or a scripted event. |
+| Timed challenges | Yes | The reward appears only after completing the challenge. |
+| Puzzle rewards | Yes | The chest is created or unlocked by solving an environmental puzzle. |
+| Remarkable chests | Yes | These are useful to track separately for furnishing collectors. |
+| Seelie encounters | Case by case | Compass behavior can vary, so locations should be verified individually. |
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use the returned `userId` as the stable user key for user-owned records; do not use email as a durable identifier.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
+## Current prototype
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
+The deployed experience currently includes:
 
-SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
+* Nine representative locations across Natlan, Fontaine, Liyue, and Mondstadt
+* Region, discovery type, text search, and completion filters
+* Five chest rarity styles
+* Individual discovery instructions and reward estimates
+* Device based progress persistence
+* Responsive desktop and mobile layouts
+* An app tool for marking known chest IDs as found
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
+The current data is representative product data, not yet a complete verified catalog. Expanding and validating the dataset is the project’s next major phase.
 
-## Local D1 migrations
+## Technical architecture
 
-For a D1-backed local preview, generate SQL with `npm run db:generate`. Build once through the Sites skill's build entrypoint (or `npm run build` for standalone use) to generate `dist/server/wrangler.json`, rebuilding if bindings change. From the project root, apply each pending migration in order:
+| Layer | Technology | Responsibility |
+| --- | --- | --- |
+| **Interface** | React 19 and TypeScript | Map experience, filters, markers, guides, and progress controls |
+| **Framework** | Vinext and Vite | Application routing, development, and production builds |
+| **Visual system** | CSS and Lucide icons | Responsive layout, styling, and interface iconography |
+| **Progress storage** | Browser LocalStorage | Device based manual completion tracking |
+| **Deployment** | Cloudflare Workers compatible build | Hosted application delivery |
+| **Future persistence** | Drizzle ORM and Cloudflare D1 | Optional account progress and curated location data |
 
-```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
+### Repository map
+
+```text
+.
+├── app/
+│   ├── page.tsx                 Map data, filters, markers, and tracking
+│   ├── globals.css              Responsive visual system
+│   └── layout.tsx               Application shell and metadata
+├── public/
+│   ├── teyvat-world-map.png     Illustrated map artwork
+│   └── treasure-chest.png       Treasure marker artwork
+├── components/ui/               Reusable interface primitives
+├── db/                          Optional Drizzle and D1 foundation
+├── scripts/                     Development and build helpers
+└── vite.config.ts               Vinext and Cloudflare configuration
 ```
 
-Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
+## Quick start
 
-## Diagnostic Commands
+### Prerequisites
 
-- `npm run install:ci`: perform the one locked dependency install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build the deployable Sites artifact
-- `npm run start`: preview the built Worker locally with D1/R2 support
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+* Node.js 22.13 or newer
+* pnpm 11 or newer
 
-When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
+### Run locally
 
-The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
+```bash
+git clone https://github.com/Skeeb32/Genshin-Interactive-Hidden-Chest-Map.git
+cd Genshin-Interactive-Hidden-Chest-Map
+pnpm install
+pnpm dev
+```
 
-## Learn More
+Open the local address printed in the terminal. The default portable development port is `5173`.
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+### Build and validate
+
+```bash
+pnpm lint
+pnpm build
+pnpm start
+```
+
+## API reality
+
+HoYoLAB game records can expose aggregate statistics such as total Common, Exquisite, Precious, and Luxurious chests opened. They do not expose a coordinate level list of which specific chests a player has collected.
+
+| Possible | Not currently possible |
+| --- | --- |
+| Display aggregate account statistics | Identify every opened chest by map coordinate |
+| Save manual progress locally or to an account | Automatically reconcile a player’s exact chest history |
+| Estimate overall exploration progress | Reliably infer which individual marker should be completed |
+
+Any future HoYoLAB integration should preserve this distinction in both the interface and documentation.
+
+## Roadmap
+
+1. Replace representative locations with a verified community sourced dataset.
+2. Add true map pan, zoom, clustering, and regional layers with MapLibre or Leaflet.
+3. Add guide screenshots, quest prerequisites, nearby waypoints, and source attribution.
+4. Support account based progress while keeping LocalStorage as a private default.
+5. Add import and export tools for progress backups.
+6. Add optional HoYoLAB aggregate statistics without implying exact chest synchronization.
+7. Add automated tests for filtering, completion state, and responsive interactions.
+
+## Contributing
+
+Verified location contributions are welcome. A useful submission should include the exact region, chest rarity, discovery type, coordinates, reproduction steps, prerequisites, and evidence that the Treasure Compass cannot reveal the reward.
+
+Please avoid submitting unverified coordinates or copying proprietary map assets from another service.
+
+## Disclaimer
+
+Hidden Chest Atlas is an independent fan project. It is not affiliated with or endorsed by HoYoverse. Genshin Impact, HoYoLAB, and related names and assets belong to their respective owners.
+
+The included map and marker artwork are original project assets created for this experience.
+
+---
+
+<div align="center">
+
+### Built by Shaqib Habib
+
+A focused exploration tool built around transparent data limits, practical player workflows, and a polished map experience.
+
+[Explore the live project](https://hidden-chest-atlas.shaqib-dev.chatgpt.site)
+
+<sub>All rights reserved © Shaqib Habib</sub>
+
+</div>
