@@ -1,64 +1,29 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, Compass, Layers3, LocateFixed, MapPin, Search, Sparkles, X } from "lucide-react";
-
-type Chest = { id:number; title:string; region:string; area:string; type:string; method:string; x:number; y:number; difficulty:"Easy"|"Medium"|"Hard"; note:string; reward:number };
-
-const chests: Chest[] = [
-  { id:1,title:"Ashen Crater Dig Spot",region:"Natlan",area:"Ochkanatlan",type:"Precious",method:"Buried",x:63,y:27,difficulty:"Medium",reward:10,note:"Defeat the three nearby warriors, then investigate the disturbed earth beside the cracked obsidian pillar." },
-  { id:2,title:"Saurian Trail Reward",region:"Natlan",area:"Tezcatepetonco Range",type:"Exquisite",method:"Puzzle",x:47,y:38,difficulty:"Easy",reward:5,note:"Follow the Monetoo trail through all four painted stones. The chest appears after the final mural lights up." },
-  { id:3,title:"Forgotten Warrior Trial",region:"Natlan",area:"Quahuacan Cliff",type:"Luxurious",method:"Challenge",x:71,y:52,difficulty:"Hard",reward:10,note:"Complete the hidden warrior trial in under 45 seconds. Enter from the cave opening on the cliff's western face." },
-  { id:4,title:"Echoes Below the Falls",region:"Fontaine",area:"Morte Region",type:"Remarkable",method:"Quest",x:31,y:62,difficulty:"Medium",reward:5,note:"Available after completing Search in the Algae Sea. Dive beneath the waterfall and activate the conch." },
-  { id:5,title:"Ancient Stone Table",region:"Liyue",area:"Chenyu Vale",type:"Precious",method:"Puzzle",x:22,y:34,difficulty:"Medium",reward:10,note:"Place three Simulacra around the stone table. One is hidden on the ridge directly north of this marker." },
-  { id:6,title:"Windrise Camp Secret",region:"Mondstadt",area:"Galesong Hill",type:"Common",method:"Buried",x:18,y:72,difficulty:"Easy",reward:2,note:"Dig at the small campfire between the two trees. No quest is required." },
-  { id:7,title:"Clockwork Rooftop Run",region:"Fontaine",area:"Court of Fontaine",type:"Exquisite",method:"Challenge",x:38,y:22,difficulty:"Hard",reward:5,note:"Start the rooftop time trial at dusk and collect all 18 Hydro Particles." },
-  { id:8,title:"Night Spirit Graffiti",region:"Natlan",area:"Basin of Unnumbered Flames",type:"Remarkable",method:"Puzzle",x:79,y:69,difficulty:"Easy",reward:5,note:"Use an Iktomisaur to scan the hidden Nightspirit graffiti on the cliff wall." },
-  { id:9,title:"Seelie Reunion",region:"Liyue",area:"Minlin",type:"Luxurious",method:"Seelie",x:55,y:76,difficulty:"Hard",reward:10,note:"Guide all three Seelie to the sealed court. The last starts inside the breakable amber to the southeast." },
-];
-const regions=["All","Natlan","Fontaine","Liyue","Mondstadt"];
-const methods=["All types","Buried","Puzzle","Challenge","Quest","Seelie"];
-const markerColor:Record<string,string>={Common:"#9ab7bf",Exquisite:"#51a8b5",Precious:"#bd7bd3",Luxurious:"#e8a84b",Remarkable:"#55b79d"};
-
+'use client';
+import { useEffect, useMemo, useState } from 'react';
+import { Check, ChevronLeft, Compass, Download, Search, X } from 'lucide-react';
+import TerrainMap from '../components/terrain-map';
+import { MAP_URL, parseProgress, type Catalog, type Point } from '../lib/exploration';
+const STORAGE='hidden-chest-hoyolab-found-v1';
 export default function Home(){
- const [region,setRegion]=useState("All"),[method,setMethod]=useState("All types"),[query,setQuery]=useState("");
- const [selected,setSelected]=useState<Chest|null>(chests[0]),[found,setFound]=useState<number[]>([]),[hideFound,setHideFound]=useState(false),[panelOpen,setPanelOpen]=useState(true);
- useEffect(()=>{const saved=localStorage.getItem("hidden-chest-found");if(saved)setFound(JSON.parse(saved))},[]);
- useEffect(()=>{
-  const context=(document as unknown as {modelContext?:{registerTool:(tool:unknown,options:{signal:AbortSignal})=>void|Promise<void>}}).modelContext;
-  if(!context?.registerTool)return;
-  const lifecycle=new AbortController();
-  void Promise.resolve(context.registerTool({
-   name:"mark_hidden_chests_found",title:"Mark hidden chests found",description:"Mark one or more visible Hidden Chest Atlas locations as found using their numeric IDs.",
-   inputSchema:{type:"object",properties:{ids:{type:"array",items:{type:"number"},minItems:1}},required:["ids"],additionalProperties:false},
-   annotations:{readOnlyHint:false,untrustedContentHint:false},
-   execute(input:unknown){const ids=(input as {ids?:unknown}).ids;if(!Array.isArray(ids)||ids.some(id=>!Number.isInteger(id)||!chests.some(c=>c.id===id)))throw new Error("Every ID must match a known chest.");const next=Array.from(new Set([...found,...ids as number[]]));setFound(next);localStorage.setItem("hidden-chest-found",JSON.stringify(next));return {marked:ids,foundCount:next.length};}
-  },{signal:lifecycle.signal})).catch(()=>{});
-  return()=>lifecycle.abort();
- },[found]);
- const filtered=useMemo(()=>chests.filter(c=>(region==="All"||c.region===region)&&(method==="All types"||c.method===method)&&(`${c.title} ${c.area}`.toLowerCase().includes(query.toLowerCase()))&&(!hideFound||!found.includes(c.id))),[region,method,query,hideFound,found]);
- function toggleFound(id:number){const next=found.includes(id)?found.filter(x=>x!==id):[...found,id];setFound(next);localStorage.setItem("hidden-chest-found",JSON.stringify(next))}
- return <main className="app-shell">
-  <header className="topbar">
-   <div className="brand"><span className="brand-mark"><Compass size={21}/></span><div><strong>Hidden Chest Atlas</strong><small>Compass-undetectable finds</small></div></div>
-   <div className="search-wrap"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search locations" aria-label="Search chest locations"/></div>
-   <button className="account-button"><span className="account-dot"/>Local progress</button>
-  </header>
-  <aside className="filters">
-   <div className="filter-head"><div><span className="eyebrow">EXPLORATION</span><h1>Hidden chests</h1></div><button className="icon-button" aria-label="Collapse filters"><ChevronLeft size={19}/></button></div>
-   <div className="progress-card"><div className="progress-copy"><span>{found.length} of {chests.length} found</span><strong>{Math.round(found.length/chests.length*100)}%</strong></div><div className="progress-track"><span style={{width:`${found.length/chests.length*100}%`}}/></div><small>Saved on this device</small></div>
-   <label className="field-label">Region</label><div className="region-grid">{regions.map(x=><button key={x} onClick={()=>setRegion(x)} className={region===x?"active":""}>{x}</button>)}</div>
-   <label className="field-label" htmlFor="method">Discovery type</label><select id="method" value={method} onChange={e=>setMethod(e.target.value)}>{methods.map(x=><option key={x}>{x}</option>)}</select>
-   <label className="toggle-row"><span><strong>Hide found</strong><small>Show only what remains</small></span><input type="checkbox" checked={hideFound} onChange={e=>setHideFound(e.target.checked)}/></label>
-   <div className="legend"><span className="field-label">CHEST RARITY</span>{Object.entries(markerColor).map(([name,color])=><span key={name}><i style={{background:color}}/>{name}</span>)}</div>
-   <div className="truth-note"><Sparkles size={17}/><p><strong>Built for honest tracking</strong><br/>HoYoLAB reports totals, not exact chest locations. Every find here is checked off by you.</p></div>
-  </aside>
-  <section className="map" aria-label="Interactive hidden chest map">
-   <div className="map-vignette"/>
-   {filtered.map(c=><button key={c.id} className={`marker ${found.includes(c.id)?"is-found":""} ${selected?.id===c.id?"is-selected":""}`} data-rarity={c.type} style={{left:`${c.x}%`,top:`${c.y}%`,"--marker":markerColor[c.type]} as React.CSSProperties} onClick={()=>{setSelected(c);setPanelOpen(true)}} aria-label={`${c.title}, ${c.type} chest`}><span><img src="/treasure-chest.png" alt=""/>{found.includes(c.id)&&<b><Check size={12}/></b>}</span></button>)}
-   {filtered.length===0&&<div className="empty-map"><Search size={24}/><strong>No hidden chests match</strong><span>Try another region or discovery type.</span></div>}
-   <div className="map-actions"><button aria-label="Center map"><LocateFixed size={19}/></button><button aria-label="Map layers"><Layers3 size={19}/></button></div><div className="map-count"><strong>{filtered.length}</strong> hidden locations</div>
-  </section>
-  {selected&&panelOpen&&<aside className="detail-panel"><button className="close-button" onClick={()=>setPanelOpen(false)} aria-label="Close location details"><X size={19}/></button><div className="detail-art"><div className="art-ridge"/><span className="rarity-pill" style={{background:markerColor[selected.type]}}>{selected.type}</span></div><div className="detail-body"><span className="location-line">{selected.region} · {selected.area}</span><h2>{selected.title}</h2><div className="tag-row"><span>{selected.method}</span><span>{selected.difficulty}</span><span>+{selected.reward} Primogems</span></div><div className="guide"><span>HOW TO FIND IT</span><p>{selected.note}</p></div><button className={`found-button ${found.includes(selected.id)?"done":""}`} onClick={()=>toggleFound(selected.id)}>{found.includes(selected.id)?<><Check size={18}/>Marked as found</>:<><MapPin size={18}/>Mark as found</>}</button><p className="sync-copy">This location is saved manually and does not alter your in-game account.</p></div></aside>}
+ const [catalog,setCatalog]=useState<Catalog|null>(null),[points,setPoints]=useState<Point[]>([]),[category,setCategory]=useState(69),[region,setRegion]=useState('all'),[query,setQuery]=useState(''),[hideFound,setHideFound]=useState(false),[found,setFound]=useState<number[]>([]),[selected,setSelected]=useState<Point|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0),[collapsed,setCollapsed]=useState(false),[progressOpen,setProgressOpen]=useState(false),[storageError,setStorageError]=useState(false);
+ useEffect(()=>{try{setFound(parseProgress(localStorage.getItem(STORAGE)))}catch{setStorageError(true)}},[]);
+ useEffect(()=>{const controller=new AbortController();setLoading(true);setError('');setPoints([]);setSelected(null);
+  (async()=>{try{let meta=catalog;if(!meta){const r=await fetch('/api/exploration',{signal:controller.signal});if(!r.ok)throw new Error('Map catalog unavailable.');meta=await r.json() as Catalog;if(!controller.signal.aborted)setCatalog(meta)}
+   const r=await fetch(`/api/exploration?category=${category}`,{signal:controller.signal});if(!r.ok)throw new Error('Chest locations unavailable.');const data=await r.json() as {points?:Point[]};if(!Array.isArray(data.points))throw new Error('Unexpected map response.');if(!controller.signal.aborted)setPoints(data.points);
+  }catch(e){if(!controller.signal.aborted)setError(`${e instanceof Error?e.message:'Unable to load map.'} Please retry.`)}finally{if(!controller.signal.aborted)setLoading(false)}})();return()=>controller.abort();
+ },[category,retry]); // eslint-disable-line react-hooks/exhaustive-deps
+ const categoryName=catalog?.categories.find(c=>c.id===category)?.name||'Buried Chest';
+ const regional=useMemo(()=>points.filter(p=>(region==='all'||p.area_id===Number(region))&&(!query||`${categoryName} ${p.id} ${catalog?.areas.find(a=>a.id===p.area_id)?.name||''}`.toLowerCase().includes(query.toLowerCase()))),[points,region,query,categoryName,catalog]);
+ const filtered=useMemo(()=>regional.filter(p=>!hideFound||!found.includes(p.id)),[regional,hideFound,found]);
+ const completed=regional.filter(p=>found.includes(p.id)).length;
+ function toggle(id:number){const next=found.includes(id)?found.filter(n=>n!==id):[...found,id];setFound(next);try{localStorage.setItem(STORAGE,JSON.stringify(next));setStorageError(false)}catch{setStorageError(true)}}
+ function exportProgress(){const blob=new Blob([JSON.stringify({source:'hoyolab',mapId:2,foundIds:found,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='hidden-chest-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ return <main className={`app-shell ${collapsed?'filters-collapsed':''}`}>
+ <header className="topbar"><div className="brand"><span className="brand-mark"><Compass size={21}/></span><div><strong>Hidden Chest Atlas</strong><small>Explore Teyvat · HoYoLAB map data</small></div></div><div className="search-wrap"><Search size={18}/><input aria-label="Search region or location ID" placeholder="Search region or location ID" value={query} onChange={e=>setQuery(e.target.value)}/></div><button className="account-button" onClick={()=>setProgressOpen(!progressOpen)} aria-expanded={progressOpen}><span className="account-dot"/>Local progress</button></header>
+ {!collapsed&&<aside className="filters"><div className="filter-head"><div><span className="eyebrow">EXPLORATION</span><h1>Chest explorer</h1></div><button className="icon-button" onClick={()=>setCollapsed(true)} aria-label="Collapse filters"><ChevronLeft size={19}/></button></div><div className="progress-card"><div className="progress-copy"><span>{completed} of {regional.length} in this view</span><strong>{regional.length?Math.round(completed/regional.length*100):0}%</strong></div><div className="progress-track"><span style={{width:`${regional.length?completed/regional.length*100:0}%`}}/></div><small>Your manual checklist, not in-game exploration %</small></div><label className="field-label" htmlFor="region">Region</label><select id="region" value={region} onChange={e=>setRegion(e.target.value)}><option value="all">All Teyvat</option>{catalog?.areas.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select><label className="field-label" htmlFor="category">Chest or discovery type</label><select id="category" value={category} onChange={e=>setCategory(Number(e.target.value))}>{!catalog&&<option value="69">Buried Chest</option>}{['Chests','Puzzle Chest'].map(group=><optgroup key={group} label={group}>{catalog?.categories.filter(c=>c.group===group).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup>)}</select><label className="toggle-row"><span><strong>Hide found</strong><small>Keep exploring what remains</small></span><input type="checkbox" checked={hideFound} onChange={e=>setHideFound(e.target.checked)}/></label><div className="truth-note"><p><strong>Real map locations. Your checklist.</strong><br/>Locations come from HoYoLAB. Marking a find saves it here, without changing your game or HoYoLAB account. Not every category is compass-undetectable.</p></div><p className="source-note">Teyvat surface map. Underground locations are flagged; open HoYoLAB for floor maps and community guides.</p><div className="location-list" aria-label="Filtered locations">{filtered.slice(0,60).map(p=><button key={p.id} onClick={()=>setSelected(p)}>{found.includes(p.id)?'✓ ':''}{categoryName} <small>#{p.id} · {catalog?.areas.find(a=>a.id===p.area_id)?.name||'Teyvat'}</small></button>)}{filtered.length>60&&<p>Zoom into the map to browse all {filtered.length.toLocaleString()} locations.</p>}</div></aside>}
+ <section className="map live-map" aria-label="Chest exploration map">{catalog&&<TerrainMap terrain={catalog.terrain} points={filtered} found={found} selected={selected?.id||null} onSelect={setSelected}/>}{collapsed&&<button className="expand-filters" onClick={()=>setCollapsed(false)}>Show filters</button>}{(loading||error||!filtered.length)&&<div className="empty-map" role="status"><strong>{loading?'Loading HoYoLAB locations…':error||'No locations in this view'}</strong>{error?<button onClick={()=>setRetry(n=>n+1)}>Retry</button>:!loading&&<span>Try another region or category, or turn off Hide found.</span>}</div>}</section>
+ {selected&&<aside className="detail-panel"><button className="close-button" aria-label="Close location details" onClick={()=>setSelected(null)}><X size={19}/></button><div className="detail-body"><span className="location-line">{catalog?.areas.find(a=>a.id===selected.area_id)?.name||'Teyvat'} · #{selected.id}</span><h2>{categoryName}</h2><div className="tag-row"><span>HoYoLAB location</span><span>{selected.z_level===0?'Surface / unspecified floor':'Underground / other floor'}</span></div><div className="guide"><span>EXPLORE THIS LOCATION</span><p>Use the terrain map to navigate, then open HoYoLAB for available community instructions and floor details.</p><a target="_blank" rel="noreferrer" href={`${MAP_URL}#/map/2?shown_types=${category}&center=${selected.x_pos},${selected.y_pos}&zoom=1`}>Open this area on HoYoLAB ↗</a></div><button className={`found-button ${found.includes(selected.id)?'done':''}`} onClick={()=>toggle(selected.id)}><Check size={18}/>{found.includes(selected.id)?'Marked as found · Undo':'Mark as found'}</button><p className="sync-copy">Saved to this browser only. No automatic game-account sync.</p></div></aside>}
+ {progressOpen&&<section className="progress-popover" aria-label="Local progress"><button className="close-button" aria-label="Close progress" onClick={()=>setProgressOpen(false)}><X size={18}/></button><h2>Your discoveries</h2><p>{found.length} HoYoLAB locations marked across categories.</p><p>Old sample-marker progress stays separate to avoid marking real chests incorrectly.</p><button className="found-button" onClick={exportProgress}><Download size={17}/>Export progress</button></section>}
+ {storageError&&<div className="storage-warning" role="status">Browser storage is unavailable. Progress lasts for this session; export a backup.</div>}
  </main>
 }

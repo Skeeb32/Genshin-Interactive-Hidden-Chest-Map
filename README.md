@@ -1,140 +1,62 @@
 <div align="center">
-
-<img src="./public/treasure-chest.png" alt="Hidden Chest Atlas treasure chest" width="150" />
+<img src="./public/treasure-chest.png" alt="Hidden Chest Atlas" width="130" />
 
 # Hidden Chest Atlas
 
-### A focused Genshin Impact tracker for the treasures your compass cannot find
+### Real Teyvat locations. Your next discovery.
 
-Explore a Teyvat inspired map, filter compass undetectable discoveries, open location guides, and keep track of every chest you find.
+Explore Genshin Impact chest and puzzle locations using HoYoLAB map data,<br/>navigate the terrain, and keep a personal checklist of your finds.
 
-<br />
+[![Explore the map](https://img.shields.io/badge/Explore_the_Map-D4A84F?style=for-the-badge&logo=googlemaps&logoColor=white)](https://hidden-chest-atlas.shaqib-dev.chatgpt.site)
+![React](https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 
-[![Live Demo](https://img.shields.io/badge/Explore_Live_Demo-D4A84F?style=for-the-badge&logo=googlemaps&logoColor=white)](https://hidden-chest-atlas.shaqib-dev.chatgpt.site)
-[![React](https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Cloudflare](https://img.shields.io/badge/Cloudflare_Workers-Ready-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
-
-<br />
-
-[Live demo](https://hidden-chest-atlas.shaqib-dev.chatgpt.site) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Roadmap](#roadmap)
-
-</div>
-
----
-
-## Find what the Treasure Compass misses
-
-The in game Treasure Compass is useful, but it does not reveal every reward in Teyvat. Buried chests, quest rewards, hidden challenges, Seelie encounters, and puzzle based discoveries can still be easy to overlook.
-
-Hidden Chest Atlas gives those locations a dedicated home. Instead of filling the screen with every visible chest, it focuses on discoveries that need context, instructions, or manual investigation.
-
-> **Honest tracking by design:** HoYoLAB exposes aggregate chest totals, not the exact coordinates of chests a player has opened. Hidden Chest Atlas therefore uses manual completion tracking and never claims to identify individual in game discoveries automatically.
-
-## Product preview
-
-<a href="https://hidden-chest-atlas.shaqib-dev.chatgpt.site">
-  <img src="./public/teyvat-world-map.png" alt="Illustrated Teyvat world map used by Hidden Chest Atlas" width="100%" />
-</a>
-
-<div align="center">
-  <sub>Illustrated Teyvat style world map with rarity coded treasure markers</sub>
+[Features](#features) · [API integration](#api-integration) · [Development](#development) · [Roadmap](#roadmap)
 </div>
 
 ## Features
 
-<table>
-  <tr>
-    <td width="33%" valign="top"><h3>🧭 Hidden discovery focus</h3>Filters around buried rewards, puzzles, quests, challenges, Seelie encounters, and other compass undetectable finds.</td>
-    <td width="33%" valign="top"><h3>🗺️ Teyvat style map</h3>Places recognizable treasure markers over an illustrated world map with clear region and location context.</td>
-    <td width="33%" valign="top"><h3>✅ Local progress</h3>Lets players mark locations as found and saves completion state directly on the device.</td>
-  </tr>
-  <tr>
-    <td width="33%" valign="top"><h3>🔎 Fast filtering</h3>Search by location, filter by region or discovery method, and hide locations already completed.</td>
-    <td width="33%" valign="top"><h3>💎 Rarity markers</h3>Distinguishes Common, Exquisite, Precious, Luxurious, and Remarkable rewards with visible colors.</td>
-    <td width="33%" valign="top"><h3>📖 Practical guides</h3>Shows the area, discovery method, difficulty, reward estimate, and instructions for every location.</td>
-  </tr>
-</table>
-
-## How it works
-
-```mermaid
-flowchart TB
-    P["Player explores the map"]
-    F["Search and discovery filters"]
-    M["Compass undetectable locations"]
-    G["Location guide and requirements"]
-    L[("Local completion state")]
-
-    P --> F
-    F --> M
-    M --> G
-    G --> L
-    L --> F
-```
-
-### Discovery categories
-
-| Category | Hidden mode | Why |
-| --- | :---: | --- |
-| Directly visible standard chests | No | These are generally discoverable with the Treasure Compass. |
-| Buried or dig locations | Yes | They require interacting with a specific ground location. |
-| Quest unlocked chests | Yes | They depend on quest progress or a scripted event. |
-| Timed challenges | Yes | The reward appears only after completing the challenge. |
-| Puzzle rewards | Yes | The chest is created or unlocked by solving an environmental puzzle. |
-| Remarkable chests | Yes | These are useful to track separately for furnishing collectors. |
-| Seelie encounters | Case by case | Compass behavior can vary, so locations should be verified individually. |
-
-## Current prototype
-
-The deployed experience currently includes:
-
-* Nine representative locations across Natlan, Fontaine, Liyue, and Mondstadt
-* Region, discovery type, text search, and completion filters
-* Five chest rarity styles
-* Individual discovery instructions and reward estimates
-* Device based progress persistence
-* Responsive desktop and mobile layouts
-* An app tool for marking known chest IDs as found
-
-The current data is representative product data, not yet a complete verified catalog. Expanding and validating the dataset is the project’s next major phase.
-
-## Technical architecture
-
-| Layer | Technology | Responsibility |
+| Explore | Track | Navigate |
 | --- | --- | --- |
-| **Interface** | React 19 and TypeScript | Map experience, filters, markers, guides, and progress controls |
-| **Framework** | Vinext and Vite | Application routing, development, and production builds |
-| **Visual system** | CSS and Lucide icons | Responsive layout, styling, and interface iconography |
-| **Progress storage** | Browser LocalStorage | Device based manual completion tracking |
-| **Deployment** | Cloudflare Workers compatible build | Hosted application delivery |
-| **Future persistence** | Drizzle ORM and Cloudflare D1 | Optional account progress and curated location data |
+| Real chest and puzzle coordinates from HoYoLAB | Mark finds and undo mistakes | Drag to pan, zoom buttons and keyboard controls |
+| Region and discovery category filters | Hide completed locations | Clustered markers when zoomed out |
+| Search by region, category name or marker ID | Export a JSON progress backup | Fit the filtered locations into view |
+| Surface terrain tiles from HoYoverse | Browser-local storage with failure feedback | Open an area in HoYoLAB for community guides |
 
-### Repository map
+The nine fictional prototype locations have been removed from the active explorer. The old sample checklist is left untouched in browser storage and is **not** migrated onto real HoYoLAB marker IDs.
 
-```text
-.
-├── app/
-│   ├── page.tsx                 Map data, filters, markers, and tracking
-│   ├── globals.css              Responsive visual system
-│   └── layout.tsx               Application shell and metadata
-├── public/
-│   ├── teyvat-world-map.png     Illustrated map artwork
-│   └── treasure-chest.png       Treasure marker artwork
-├── components/ui/               Reusable interface primitives
-├── db/                          Optional Drizzle and D1 foundation
-├── scripts/                     Development and build helpers
-└── vite.config.ts               Vinext and Cloudflare configuration
-```
+> **A map checklist, not account synchronization.** This app does not read your game account, automatically detect opened chests, or report your in-game exploration percentage. The percentage shown is completion of the current filtered checklist. Not every available category is compass-undetectable.
 
-## Quick start
+## API integration
 
-### Prerequisites
+The server reads the public endpoints used by the [HoYoLAB Teyvat Interactive Map](https://act.hoyolab.com/ys/app/interactive-map/index.html?lang=en-us#/map/2). No account cookies or API keys are requested.
 
-* Node.js 22.13 or newer
-* pnpm 11 or newer
+| Upstream endpoint | Purpose |
+| --- | --- |
+| `/v3/map/info?map_id=2` | Current terrain version, size, origin and zoom levels |
+| `/v1/map/label/tree?map_id=2` | Chest and puzzle category names |
+| `/v1/map/get_area_pageLabel?map_id=2` | Teyvat region names and IDs |
+| `/v1/map/point/list?map_id=2` | Location IDs, coordinates, categories and floor indicators |
 
-### Run locally
+Requests use `app_sn=ys_obc` and the English language header. The fixed upstream host is `sg-public-api-static.hoyolab.com/common/map_user/ys_obc`. The app exposes `/api/exploration` for metadata and `/api/exploration?category=69` for a category's locations.
+
+The public upstream `label_ids` parameter returned empty success responses during verification. The adapter therefore retrieves the point list once per cache window, retains only chest and puzzle categories, and filters it locally. Concurrent point requests share one pending fetch. Metadata is cached for an hour, normalized locations for ten minutes, and responses carry shorter HTTP cache lifetimes. Caches are per running server instance.
+
+Terrain is loaded on demand from `act-webstatic.hoyoverse.com`, using the current version returned by the API. Marker projection adds the API's map origin to each source coordinate, preserving the relationship between terrain and locations.
+
+### Verification and limitations
+
+Live checks on **October 18, 2026** returned 143 chest/puzzle categories, 8 Teyvat regions, 103 buried-chest locations and 1,448 common-chest locations. These are observed API counts, not a guarantee of game completeness. Terrain image delivery was also verified.
+
+- Public HoYoLAB endpoints are not a guaranteed stable developer API. Availability and completeness depend on the upstream service.
+- This version renders the Teyvat surface map. Separate underground floor imagery and other map IDs are not implemented; floor indicators and HoYoLAB links help identify those cases.
+- Community instructions remain on HoYoLAB. The app does not invent chest names, rewards or puzzle walkthroughs.
+- Progress belongs to the current browser. JSON export is available; import and account synchronization are not yet implemented.
+- API failures show a retry state. No sample locations silently replace failed live data.
+
+## Development
+
+Requires Node.js 22.13+ and pnpm 11+.
 
 ```bash
 git clone https://github.com/Skeeb32/Genshin-Interactive-Hidden-Chest-Map.git
@@ -143,60 +65,48 @@ pnpm install
 pnpm dev
 ```
 
-Open the local address printed in the terminal. The default portable development port is `5173`.
-
-### Build and validate
-
 ```bash
-pnpm lint
+pnpm exec tsc --noEmit
+node scripts/test-exploration.mjs
 pnpm build
-pnpm start
 ```
 
-## API reality
+The focused checks cover coordinate alignment, malformed local progress, duplicate IDs, category isolation, request reuse, invalid categories and upstream failure handling. A live API smoke test was also run. Browser visual QA was unavailable for this update.
 
-HoYoLAB game records can expose aggregate statistics such as total Common, Exquisite, Precious, and Luxurious chests opened. They do not expose a coordinate level list of which specific chests a player has collected.
-
-| Possible | Not currently possible |
+| File | Responsibility |
 | --- | --- |
-| Display aggregate account statistics | Identify every opened chest by map coordinate |
-| Save manual progress locally or to an account | Automatically reconcile a player’s exact chest history |
-| Estimate overall exploration progress | Reliably infer which individual marker should be completed |
+| `app/page.tsx` | Filters, loading/retry states, location details and progress |
+| `app/api/exploration/route.ts` | Fixed-host API adapter, validation and caches |
+| `components/terrain-map.tsx` | Terrain tiles, coordinates, clustering and navigation |
+| `lib/exploration.ts` | Shared models, projection and progress parsing |
+| `scripts/test-exploration.mjs` | Focused API and data safety checks |
 
-Any future HoYoLAB integration should preserve this distinction in both the interface and documentation.
+Built with React, TypeScript, Vinext, Vite and Lucide. Hosted as a Cloudflare-compatible Worker.
 
 ## Roadmap
 
-1. Replace representative locations with a verified community sourced dataset.
-2. Add true map pan, zoom, clustering, and regional layers with MapLibre or Leaflet.
-3. Add guide screenshots, quest prerequisites, nearby waypoints, and source attribution.
-4. Support account based progress while keeping LocalStorage as a private default.
-5. Add import and export tools for progress backups.
-6. Add optional HoYoLAB aggregate statistics without implying exact chest synchronization.
-7. Add automated tests for filtering, completion state, and responsive interactions.
+1. Add underground floor overlays and additional map IDs.
+2. Add progress import with source/version validation.
+3. Improve guide integration and location sharing.
+4. Add browser interaction coverage and current screenshots.
+5. Consider optional account-level statistics without implying per-chest synchronization.
 
-## Contributing
+<details>
+<summary>Original concept artwork</summary>
 
-Verified location contributions are welcome. A useful submission should include the exact region, chest rarity, discovery type, coordinates, reproduction steps, prerequisites, and evidence that the Treasure Compass cannot reveal the reward.
+![Original illustrated-map concept](./public/teyvat-world-map.png)
 
-Please avoid submitting unverified coordinates or copying proprietary map assets from another service.
+This is the original prototype illustration, not a screenshot of the current API-backed map.
+</details>
 
-## Disclaimer
+## Contributing and credits
 
-Hidden Chest Atlas is an independent fan project. It is not affiliated with or endorsed by HoYoverse. Genshin Impact, HoYoLAB, and related names and assets belong to their respective owners.
+Report issues with a marker ID, category, region, expected behavior and reproduction steps. Keep source coordinates intact and avoid presenting estimates as verified discoveries.
 
-The included map and marker artwork are original project assets created for this experience.
-
----
+Map imagery and source data are provided by HoYoverse through HoYoLAB; their rights remain with their owners. The treasure marker and original concept artwork are project assets. This is an independent fan project, not affiliated with or endorsed by HoYoverse.
 
 <div align="center">
 
-### Built by Shaqib Habib
-
-A focused exploration tool built around transparent data limits, practical player workflows, and a polished map experience.
-
-[Explore the live project](https://hidden-chest-atlas.shaqib-dev.chatgpt.site)
-
-<sub>All rights reserved © Shaqib Habib</sub>
+**Built by Shaqib Habib** · [Explore Hidden Chest Atlas](https://hidden-chest-atlas.shaqib-dev.chatgpt.site)
 
 </div>

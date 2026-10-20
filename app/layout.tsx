@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Hidden Chest Atlas",
-  description: "Track Genshin Impact chests and rewards the Treasure Compass cannot detect.",
+  description: "Explore Genshin Impact chest locations with live HoYoLAB map data and a personal discovery checklist.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
