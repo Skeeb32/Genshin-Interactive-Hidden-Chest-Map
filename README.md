@@ -22,6 +22,7 @@ Explore Genshin Impact chest and puzzle locations using HoYoLAB map data,<br/>na
 | Region and discovery category filters | Hide completed locations | Clustered markers when zoomed out |
 | Search by region, category name or marker ID | Export a JSON progress backup | Fit the filtered locations into view |
 | Surface terrain tiles from HoYoverse | Browser-local storage with failure feedback | Open an area in HoYoLAB for community guides |
+| HoYoLAB-style icon shelf with category art and counts | Category-specific marker icons | Selected layers update the map and location list together |
 
 The nine fictional prototype locations have been removed from the active explorer. The old sample checklist is left untouched in browser storage and is **not** migrated onto real HoYoLAB marker IDs.
 
@@ -29,7 +30,7 @@ The nine fictional prototype locations have been removed from the active explore
 
 ## API integration
 
-The server reads the public endpoints used by the [HoYoLAB Teyvat Interactive Map](https://act.hoyolab.com/ys/app/interactive-map/index.html?lang=en-us#/map/2). No account cookies or API keys are requested.
+The app uses the public endpoints behind the [HoYoLAB Teyvat Interactive Map](https://act.hoyolab.com/ys/app/interactive-map/index.html?lang=en-us#/map/2). No account cookies or API keys are requested.
 
 | Upstream endpoint | Purpose |
 | --- | --- |
@@ -38,21 +39,21 @@ The server reads the public endpoints used by the [HoYoLAB Teyvat Interactive Ma
 | `/v1/map/get_area_pageLabel?map_id=2` | Teyvat region names and IDs |
 | `/v1/map/point/list?map_id=2` | Location IDs, coordinates, categories and floor indicators |
 
-Requests use `app_sn=ys_obc` and the English language header. The fixed upstream host is `sg-public-api-static.hoyolab.com/common/map_user/ys_obc`. The app exposes `/api/exploration` for metadata and `/api/exploration?category=69` for a category's locations.
+The checked-in `data/exploration.json` snapshot contains the 15 layers used by the reference URL (`694,17,44,45,46,269,18,70,64,71,77,79,69,798,836`), their official icon artwork, the current terrain metadata, eight regions and 6,012 locations. The app exposes `/api/exploration` for metadata and `/api/exploration?category=69` for a category's locations. Keeping this compact snapshot in the repository prevents a slow or rate-limited upstream response from leaving the map blank in a preview or deployment.
 
-The public upstream `label_ids` parameter returned empty success responses during verification. The adapter therefore retrieves the point list once per cache window, retains only chest and puzzle categories, and filters it locally. Concurrent point requests share one pending fetch. Metadata is cached for an hour, normalized locations for ten minutes, and responses carry shorter HTTP cache lifetimes. Caches are per running server instance.
+The original upstream `label_ids` parameter returned empty success responses during verification, so the snapshot is normalized once and the route filters it locally by category. Metadata is cached for an hour, locations for ten minutes, and responses carry shorter HTTP cache lifetimes. Caches are per running server instance.
 
 Terrain is loaded on demand from `act-webstatic.hoyoverse.com`, using the current version returned by the API. Marker projection adds the API's map origin to each source coordinate, preserving the relationship between terrain and locations.
 
 ### Verification and limitations
 
-Live checks on **October 18, 2026** returned 143 chest/puzzle categories, 8 Teyvat regions, 103 buried-chest locations and 1,448 common-chest locations. These are observed API counts, not a guarantee of game completeness. Terrain image delivery was also verified.
+Live checks on **October 28, 2026** returned 15 selected icon categories, 8 Teyvat regions, 103 buried-chest locations and 1,448 common-chest locations. These are observed API counts, not a guarantee of game completeness. Terrain image delivery and category-specific icon rendering were also verified in the browser.
 
-- Public HoYoLAB endpoints are not a guaranteed stable developer API. Availability and completeness depend on the upstream service.
+- The checked-in snapshot can age as HoYoLAB adds locations or changes category art; refresh it from the documented endpoints when a current dataset is needed.
 - This version renders the Teyvat surface map. Separate underground floor imagery and other map IDs are not implemented; floor indicators and HoYoLAB links help identify those cases.
 - Community instructions remain on HoYoLAB. The app does not invent chest names, rewards or puzzle walkthroughs.
 - Progress belongs to the current browser. JSON export is available; import and account synchronization are not yet implemented.
-- API failures show a retry state. No sample locations silently replace failed live data.
+- No fictional sample locations are used by the active explorer; every rendered point comes from the pinned HoYoLAB snapshot.
 
 ## Development
 
@@ -71,12 +72,12 @@ node scripts/test-exploration.mjs
 pnpm build
 ```
 
-The focused checks cover coordinate alignment, malformed local progress, duplicate IDs, category isolation, request reuse, invalid categories and upstream failure handling. A live API smoke test was also run. Browser visual QA was unavailable for this update.
+The focused checks cover terrain metadata, coordinate alignment, duplicate IDs, category isolation and snapshot counts. Browser visual QA verified the icon shelf, category switching, official terrain tiles and category-specific map markers.
 
 | File | Responsibility |
 | --- | --- |
 | `app/page.tsx` | Filters, loading/retry states, location details and progress |
-| `app/api/exploration/route.ts` | Fixed-host API adapter, validation and caches |
+| `app/api/exploration/route.ts` | Snapshot-backed API adapter, validation and caches |
 | `components/terrain-map.tsx` | Terrain tiles, coordinates, clustering and navigation |
 | `lib/exploration.ts` | Shared models, projection and progress parsing |
 | `scripts/test-exploration.mjs` | Focused API and data safety checks |

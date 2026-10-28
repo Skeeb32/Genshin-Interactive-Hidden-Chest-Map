@@ -1,5 +1,5 @@
 export type Point = { id: number; label_id: number; x_pos: number; y_pos: number; area_id: number; z_level: number };
-export type Category = { id: number; name: string; group: string };
+export type Category = { id: number; name: string; group: string; icon: string; point_count: number };
 export type Area = { id: number; name: string; l_x: number; l_y: number; r_x: number; r_y: number };
 export type Terrain = { origin: number[]; total_size: number[]; map_version: string; min_zoom: number; max_zoom: number };
 export type Catalog = { categories: Category[]; areas: Area[]; terrain: Terrain };

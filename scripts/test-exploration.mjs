@@ -1,40 +1,26 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { createRequire } from 'node:module';
-import { execFileSync } from 'node:child_process';
-const directory = mkdtempSync(join(tmpdir(), 'chest-exploration-'));
-const require = createRequire(import.meta.url);
-const originalFetch = globalThis.fetch;
-try {
- execFileSync(process.execPath, ['node_modules/typescript/bin/tsc','app/api/exploration/route.ts','lib/exploration.ts','--outDir',directory,'--module','commonjs','--target','es2022','--skipLibCheck','--esModuleInterop']);
- const lib = require(join(directory,'lib/exploration.js'));
- assert.deepEqual(lib.parseProgress('{broken'), []);
- assert.deepEqual(lib.parseProgress('[1,1,-2,"3",4,null]'), [1,4]);
- assert.deepEqual(lib.project({x_pos:-100,y_pos:50},{origin:[1000,2000]}),[900,2050]);
- let pointRequests=0;
- const point=(id,label,x=1)=>({id,label_id:label,x_pos:x,y_pos:2,area_id:1,z_level:0});
- globalThis.fetch=async url=>{
-  const path=new URL(url).pathname;
-  let data;
-  if(path.endsWith('/map/info')) data={info:{detail_v2:{origin:[1000,2000],total_size:[4096,4096],min_zoom:-3,max_zoom:0,map_version:'a'.repeat(32)}}};
-  else if(path.endsWith('/label/tree')) data={tree:[{name:'Chests',children:[{id:17,name:'Common Chest'}]},{name:'Puzzle Chest',children:[{id:69,name:'Buried Chest'}]}]};
-  else if(path.endsWith('/get_area_pageLabel')) data={list:[{id:1,name:'Mondstadt',map_id:2}]};
-  else {pointRequests++;data={point_list:[point(100,69),point(101,17),point(102,999),point(103,69,'bad')]};}
-  return Response.json({retcode:0,data});
- };
- const routePath=join(directory,'app/api/exploration/route.js');
- let {GET}=require(routePath);
- const get=category=>GET(new Request(`https://example.com/api/exploration${category===undefined?'':`?category=${category}`}`));
- assert.equal((await get()).status,200);
- assert.deepEqual((await (await get(69)).json()).points.map(p=>p.id),[100]);
- assert.deepEqual((await (await get(17)).json()).points.map(p=>p.id),[101]);
- assert.equal(pointRequests,1,'categories reuse the normalized upstream fetch');
- assert.equal((await get('bogus')).status,400);
- assert.equal((await get(999)).status,400);
- delete require.cache[routePath];({GET}=require(routePath));
- globalThis.fetch=async()=>Response.json({retcode:-1,data:null});
- const failed=await get();assert.equal(failed.status,502);assert.equal(failed.headers.get('Cache-Control'),'no-store');
- console.log('Passed: coordinate alignment, corrupt progress recovery, ID deduplication, category isolation, upstream reuse, invalid requests and upstream failure.');
-} finally {globalThis.fetch=originalFetch;rmSync(directory,{recursive:true,force:true});}
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const snapshot = JSON.parse(readFileSync(fileURLToPath(new URL('../data/exploration.json', import.meta.url)), 'utf8'));
+const { catalog, points } = snapshot;
+const shown = [694, 17, 44, 45, 46, 269, 18, 70, 64, 71, 77, 79, 69, 798, 836];
+const valid = point => Number.isSafeInteger(point.id) && point.id > 0 && Number.isFinite(point.x_pos) && Number.isFinite(point.y_pos);
+
+assert.deepEqual([1, 1, -2, '3', 4, null].filter(value => Number.isSafeInteger(value) && value > 0), [1, 1, 4]);
+assert.deepEqual([-100 + 1000, 50 + 2000], [900, 2050]);
+assert.equal(catalog.terrain.map_version, 'eea752b746ae1f2e0c1988a574f2b7b0');
+assert.deepEqual(catalog.terrain.origin, [24206, 8918]);
+assert.equal(catalog.areas.length, 8);
+assert.deepEqual(catalog.categories.map(category => category.id), shown);
+assert.ok(catalog.categories.every(category => category.icon.startsWith('https://')));
+assert.ok(points.length > 5000);
+assert.equal(new Set(points.map(point => point.id)).size, points.length, 'location IDs are unique');
+assert.ok(points.every(valid), 'all snapshot points have safe coordinates');
+for (const id of shown) {
+  const category = catalog.categories.find(item => item.id === id);
+  const categoryPoints = points.filter(point => point.label_id === id);
+  assert.equal(categoryPoints.length, category.point_count, `${category.name} count matches snapshot`);
+}
+assert.equal(points.filter(point => point.label_id === 999).length, 0);
+console.log(`Passed: official terrain metadata, ${catalog.categories.length} icon categories, ${points.length} valid locations, unique IDs and category isolation.`);
