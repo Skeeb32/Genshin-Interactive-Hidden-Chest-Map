@@ -1,7 +1,7 @@
 <div align="center">
 <img src="./public/treasure-chest.png" alt="Hidden Chest Atlas" width="130" />
 
-# Hidden Chest Atlas 7.1
+# Hidden Chest Atlas 7.1!
 
 ### Real Teyvat locations. Your next discovery.
 
